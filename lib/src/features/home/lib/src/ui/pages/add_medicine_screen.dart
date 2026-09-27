@@ -194,13 +194,25 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   }
 
   void _saveMedicine() {
-    final medicine = Medicine(
-      name: _nameController.text,
-      dosage: _dosageController.text,
-      frequency: _selectedFrequency,
-      duration: _durationController.text,
-      reminderTimes: _reminderTimes,
-    );
+    // When editing, keep id/frequencyType/dayOfWeek so activate-reminders
+    // updates the existing medicine instead of deleting and recreating it.
+    final existing = widget.medicine;
+    final medicine = existing != null
+        ? existing.copyWith(
+            name: _nameController.text,
+            dosage: _dosageController.text,
+            frequency: _selectedFrequency,
+            duration: _durationController.text,
+            reminderTimes: _reminderTimes,
+            hasWarning: false,
+          )
+        : Medicine(
+            name: _nameController.text,
+            dosage: _dosageController.text,
+            frequency: _selectedFrequency,
+            duration: _durationController.text,
+            reminderTimes: _reminderTimes,
+          );
     CcRouteHelper.pop(args: medicine);
   }
 

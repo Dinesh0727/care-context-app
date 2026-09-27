@@ -88,21 +88,46 @@ class MedicineEntity {
     };
   }
 
+  /// Builds one entry of the activate-reminders payload. The backend treats the
+  /// payload as the full medicine list, so existing medicines must carry their
+  /// `medicineId` or they are deleted and recreated.
   Map<String, dynamic> toActivateRemindersJson() {
+    final times = reminderTimes
+        .map((e) => e.time)
+        .where((t) => t.isNotEmpty)
+        .toList();
+    final resolvedFrequency = _resolveFrequency(times.length);
     final map = <String, dynamic>{
       'medicineName': name,
-      'dosage': dosage.isNotEmpty ? dosage : '1-0-0',
-      'frequency': reminderTimes.length.toString(),
-      'reminderTimes': reminderTimes.map((e) => e.time).toList(),
-      'frequencyType': frequencyType ?? '1',
+      'frequency': resolvedFrequency.toString(),
+      // Times must match the frequency; otherwise let the backend use its defaults
+      'reminderTimes': times.length == resolvedFrequency ? times : <String>[],
+      'frequencyType': frequencyType ?? 'DAILY',
     };
     if (id != null && id!.isNotEmpty) {
       map['medicineId'] = id;
+    }
+    if (dosage.isNotEmpty) {
+      map['dosage'] = dosage;
+    }
+    if (duration.isNotEmpty) {
+      map['duration'] = duration;
     }
     if (dayOfWeek != null && dayOfWeek!.isNotEmpty) {
       map['dayOfWeek'] = dayOfWeek;
     }
     return map;
+  }
+
+  /// Backend accepts only 1–3. The reminder times are what the user sees and
+  /// edits, so their count wins; with no usable times (e.g. none scheduled yet)
+  /// fall back to the frequency from the GET response, then 1. The edit screen
+  /// stores labels like "Once daily", which don't parse and are skipped.
+  int _resolveFrequency(int timesCount) {
+    if (timesCount >= 1 && timesCount <= 3) return timesCount;
+    final stored = int.tryParse(frequency.trim());
+    if (stored != null && stored >= 1 && stored <= 3) return stored;
+    return 1;
   }
 }
 

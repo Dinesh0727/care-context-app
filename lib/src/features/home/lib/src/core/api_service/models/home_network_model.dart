@@ -114,10 +114,10 @@ class MedicineNetworkModel {
 
   factory MedicineNetworkModel.fromJson(Map<String, dynamic> json) {
     return MedicineNetworkModel(
-      id: json['id'] as String?,
+      id: (json['medicineId'] ?? json['id']) as String?,
       name: json['medicineName'] ?? json['name'] ?? '',
       dosage: json['dosage'] ?? '',
-      frequency: json['frequency'] ?? '',
+      frequency: json['frequency']?.toString() ?? '',
       frequencyType: json['frequencyType'] as String?,
       dayOfWeek: json['dayOfWeek'] as String?,
       duration: json['duration'] ?? '',
